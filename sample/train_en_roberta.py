@@ -74,3 +74,5 @@ trainer = Trainer(train_data=train_data, model=model,
 trainer.train(load_best_model=False)
 
 fitlog.add_other(trainer.start_time, name='start_time')
+torch.save(model.state_dict(), 'model.bin')
+print('model saved!')

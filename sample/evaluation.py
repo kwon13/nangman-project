@@ -37,6 +37,8 @@ pad_id = data_bundle.pad_id
 model = ENRobertaReverseDict(pre_name, word2bpes, pad_id=pad_id,
                           number_word_in_train=None)
 
+model.load_state_dict(torch.load('./model.bin'))
+
 if torch.cuda.is_available():
     model.cuda()
 
