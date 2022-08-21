@@ -1,5 +1,3 @@
-import os
-sys.path.append('../')
 
 import os
 if 'p' in os.environ:
@@ -9,17 +7,15 @@ import torch
 from torch import optim
 from fastNLP import Trainer, CrossEntropyLoss
 from fastNLP import BucketSampler, cache_results, WarmupCallback, GradientClipCallback, FitlogCallback #fastNLP: high-level interface
-from mono.data.pipe import ENBertPipe
-from mono.model.bert import ENRobertaReverseDict
+from model.bert import ENRobertaReverseDict
 import fitlog
-from mono.model.metrics import MonoMetric
-from joint.data.utils import clip_max_length
-
+from model.metrics import MonoMetric
+from data.pipe import ENRobertaPipe
 fitlog.set_log_dir('en_logs') 
 fitlog.add_hyper_in_file(__file__) 
 fitlog.add_other('uncased', name='note')
 
-paths = '../data/en'
+paths = './data/'
 #######hyper
 model_name = 'roberta'
 max_word_len = 5
@@ -27,7 +23,7 @@ lr = 2e-5
 batch_size = 64
 n_epochs = 10
 #######hyper
-pre_name = 'roberta-base'
+pre_name = 'klue/roberta-base'
 
 cache_results('caches/en_{}_{}.pkl'.format(pre_name.split('/')[-1], max_word_len), _refresh=False)
 def get_data():
@@ -49,7 +45,7 @@ if torch.cuda.is_available():
 optimizer = optim.AdamW(model.parameters(), lr=lr)
 
 data = {}
-for name in ['seen', 'unseen', 'desc']:
+for name in ['test']:
     data[name] = data_bundle.get_dataset(name)
 
 callbacks = [GradientClipCallback(clip_type='value'), WarmupCallback(warmup=0.01, schedule='linear')]
@@ -58,15 +54,23 @@ train_data = data_bundle.get_dataset('train')
 train_data.add_seq_len('input')
 
 sampler = BucketSampler()
-clip_max_length(train_data, data_bundle)
+
+# trainer = Trainer(train_data=train_data, model=model,
+#                   optimizer=optimizer, loss=CrossEntropyLoss(),
+#                  batch_size=batch_size, sampler=sampler, drop_last=False, update_every=1,
+#                  num_workers=1, n_epochs=n_epochs, print_every=5,
+#                  dev_data=data_bundle.get_dataset('dev'), metrics=MonoMetric())
 
 trainer = Trainer(train_data=train_data, model=model,
                   optimizer=optimizer, loss=CrossEntropyLoss(),
                  batch_size=batch_size, sampler=sampler, drop_last=False, update_every=1,
                  num_workers=1, n_epochs=n_epochs, print_every=5,
                  dev_data=data_bundle.get_dataset('dev'), metrics=MonoMetric(),
-                 metric_key='t10',
+                 metric_key='top5',
                  validate_every=-1, save_path='save_models/', use_tqdm=True, device=None,
                  callbacks=callbacks, check_code_level=-1)
+
+#trainer.train()
 trainer.train(load_best_model=False)
+
 fitlog.add_other(trainer.start_time, name='start_time')
