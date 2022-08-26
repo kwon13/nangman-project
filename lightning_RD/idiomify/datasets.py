@@ -60,9 +60,6 @@ class Idiom2DefDataset(Dataset):
 
 
 class Idiom2Def(Idiom2DefDataset):
-    """
-    eng-eng
-    """
     def __init__(self, idiomify_dataset: List[List[str]], tokenizer: AutoTokenizer, k: int):
         classes = IDIOM_VOCAB
         idiom2Def = self.to_idiom2Def(idiomify_dataset)
@@ -71,7 +68,7 @@ class Idiom2Def(Idiom2DefDataset):
     @staticmethod
     def to_idiom2Def(idiomify_dataset) -> List[Tuple[str, str]]:
         return [
-            (row[0].strip(), en_def.strip())
+            (str(row[0]).strip(), str(idiom_def).strip())
             for row in idiomify_dataset
-            for en_def in row[3:]
+            for idiom_def in row[3:]
         ]
