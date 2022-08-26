@@ -60,6 +60,7 @@ class Idiom2DefDataset(Dataset):
 
 
 class Idiom2Def(Idiom2DefDataset):
+
     def __init__(self, idiomify_dataset: List[List[str]], tokenizer: AutoTokenizer, k: int):
         classes = IDIOM_VOCAB
         idiom2Def = self.to_idiom2Def(idiomify_dataset)
@@ -70,5 +71,5 @@ class Idiom2Def(Idiom2DefDataset):
         return [
             (str(row[0]).strip(), str(idiom_def).strip())
             for row in idiomify_dataset
-            for idiom_def in row[3:]
+            for idiom_def in row[1:] # idiom idx = [0], contents idx = [1:]
         ]
